@@ -80,9 +80,9 @@
       throw new Error("Gemini key not found in Firebase Firestore (settings/api).");
     }
 
-    // Smart Fallback AI Caller: agar 1st model busy ho toh turant 2nd par shift karega
+    // Auto-fallback with supported models and retry buffer
     async function callGemini(apiKey, prompt) {
-      const models = ["gemini-1.5-flash", "gemini-1.5-flash-8b"];
+      const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash-latest"];
       let lastErr = null;
 
       for (const model of models) {
@@ -104,15 +104,16 @@
             return data;
           }
           if (data.error) {
-            console.warn(`Model ${model} busy/failed:`, data.error.message);
+            console.warn(`Model ${model} issue:`, data.error.message);
             lastErr = new Error(data.error.message);
           }
         } catch (err) {
-          console.warn(`Error on ${model}:`, err);
+          console.warn(`Network error on ${model}:`, err);
           lastErr = err;
         }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      throw lastErr || new Error("High traffic on AI servers. Please retry.");
+      throw lastErr || new Error("AI server busy. Please retry.");
     }
 
     function renderAuthButton() {
