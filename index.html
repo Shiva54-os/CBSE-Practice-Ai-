@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CBSE Class 10 Board Examination Hub</title>
+  <title>CBSE Class 10 Board Practice Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -19,7 +19,7 @@
         <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
           CBSE Board Practice Hub
         </h1>
-        <p class="text-xs text-slate-400">Class 10 Smart Mock System • No Repetition</p>
+        <p class="text-xs text-slate-400">Class 10 Smart Mock System • 43-Question Board Pattern</p>
       </div>
       <div id="auth-container"></div>
     </header>
@@ -55,7 +55,8 @@
     let currentUser = null;
     let currentQuestions = [];
     let userAnswers = {};
-    let cachedGeminiKey = null;
+    let lastChapter = "";
+    let lastDifficulty = "";
 
     const authContainer = document.getElementById("auth-container");
     const mainContent = document.getElementById("main-content");
@@ -64,6 +65,8 @@
       currentUser = user;
       renderAuthButton();
       if (user) {
+        // Pre-fetch and cache key in session so it never delays again
+        getGeminiKey().catch(console.error);
         renderSetupScreen();
       } else {
         renderLoginPrompt();
@@ -71,27 +74,30 @@
     });
 
     async function getGeminiKey() {
-      if (cachedGeminiKey) return cachedGeminiKey;
+      const cached = sessionStorage.getItem("cached_gemini_key");
+      if (cached) return cached;
+
       const snap = await getDoc(doc(db, "settings", "api"));
       if (snap.exists() && snap.data().geminiKey) {
-        cachedGeminiKey = snap.data().geminiKey.trim();
-        return cachedGeminiKey;
+        const key = snap.data().geminiKey.trim();
+        sessionStorage.setItem("cached_gemini_key", key);
+        return key;
       }
       throw new Error("Gemini key not found in Firebase Firestore.");
     }
 
-    // High Reliability Gemini Caller with auto-retry
-    async function callGeminiWithRetry(apiKey, prompt, updateStatus) {
+    // High Resilience Auto-Retry with Progressive Delays
+    async function callGemini(apiKey, prompt, updateStatus) {
       const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-      const maxRetries = 4;
+      const delays = [2000, 3500, 5000, 6000];
       let lastErrorMessage = "";
 
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      for (let attempt = 1; attempt <= 4; attempt++) {
         try {
           if (updateStatus) {
             updateStatus(attempt === 1 
-              ? "Drafting Full CBSE Paper (43 Questions)..." 
-              : `Optimizing connection... (Attempt ${attempt}/${maxRetries})`
+              ? "Generating CBSE Board Paper (43 Questions)..." 
+              : `AI busy, auto-reconnecting... (Attempt ${attempt}/4)`
             );
           }
 
@@ -117,17 +123,18 @@
 
           if (data.error) {
             lastErrorMessage = data.error.message;
-            console.warn(`Attempt ${attempt} error:`, data.error.message);
+            console.warn(`Attempt ${attempt} rush/error:`, data.error.message);
           }
         } catch (err) {
           lastErrorMessage = err.message;
           console.warn(`Network error on attempt ${attempt}:`, err);
         }
 
-        await new Promise((r) => setTimeout(r, 2000));
+        // Wait before next retry
+        await new Promise(r => setTimeout(r, delays[attempt - 1] || 3000));
       }
 
-      throw new Error(lastErrorMessage || "High traffic on AI servers. Please try again.");
+      throw new Error(lastErrorMessage || "Server is experiencing high traffic. Please retry in a few seconds.");
     }
 
     function renderAuthButton() {
@@ -140,7 +147,10 @@
             </button>
           </div>
         `;
-        document.getElementById("logout-btn").onclick = () => signOut(auth);
+        document.getElementById("logout-btn").onclick = () => {
+          sessionStorage.removeItem("cached_gemini_key");
+          signOut(auth);
+        };
       } else {
         authContainer.innerHTML = `
           <button id="login-btn" class="bg-blue-600 hover:bg-blue-500 text-xs font-semibold px-4 py-2 rounded-lg text-white">
@@ -171,7 +181,7 @@
         <div class="bg-slate-800/40 border border-slate-700/80 p-6 rounded-2xl space-y-5">
           <div>
             <label class="block text-sm font-semibold text-slate-300 mb-2">Subject / Chapter Name</label>
-            <input id="chapter-input" type="text" placeholder="e.g. Science: Chemical Reactions and Equations" 
+            <input id="chapter-input" type="text" value="${lastChapter}" placeholder="e.g. Science: Chemical Reactions and Equations" 
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" />
           </div>
 
@@ -199,23 +209,29 @@
         </div>
       `;
 
-      document.getElementById("start-btn").onclick = handleStartPractice;
-    }
-
-    async function handleStartPractice() {
-      const chapter = document.getElementById("chapter-input").value.trim();
-      const difficulty = document.getElementById("difficulty-input").value;
-
-      if (!chapter) {
-        alert("Please enter a chapter name");
-        return;
+      if (lastDifficulty) {
+        document.getElementById("difficulty-input").value = lastDifficulty;
       }
 
+      document.getElementById("start-btn").onclick = () => {
+        const ch = document.getElementById("chapter-input").value.trim();
+        const diff = document.getElementById("difficulty-input").value;
+        if (!ch) {
+          alert("Please enter a chapter name");
+          return;
+        }
+        lastChapter = ch;
+        lastDifficulty = diff;
+        triggerPaperGeneration(ch, diff);
+      };
+    }
+
+    async function triggerPaperGeneration(chapter, difficulty) {
       mainContent.innerHTML = `
         <div class="text-center py-20 space-y-4">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-cyan-500 border-t-transparent"></div>
-          <h3 id="loader-title" class="text-lg font-semibold text-white">Drafting Full CBSE Paper (43 Questions)...</h3>
-          <p id="loader-sub" class="text-xs text-slate-400">Verifying past questions from your account to avoid repetition.</p>
+          <h3 id="loader-title" class="text-lg font-semibold text-white">Generating CBSE Board Paper (43 Questions)...</h3>
+          <p id="loader-sub" class="text-xs text-slate-400">Verifying non-repetition database...</p>
         </div>
       `;
 
@@ -231,20 +247,20 @@
         const historySnap = await getDoc(historyRef);
         const excludedTopics = historySnap.exists() ? historySnap.data().topics || [] : [];
 
+        // Highly optimized prompt to prevent token bloating / high-demand 503
         const prompt = `
-You are an expert CBSE Class 10 Board Examiner. Create a comprehensive, full-scale practice examination for Chapter: "${chapter}".
-Difficulty Level: ${difficulty}.
-DO NOT repeat these topics already solved by the user: ${JSON.stringify(excludedTopics.slice(-40))}.
+Create a CBSE Class 10 Board Exam Paper for Chapter: "${chapter}".
+Level: ${difficulty}.
+DO NOT repeat: ${JSON.stringify(excludedTopics.slice(-30))}.
 
-Generate EXACTLY 43 questions following this CBSE pattern:
-- Section A: 15 Multiple Choice Questions (type: "MCQ") with 4 options each.
-- Section B: 5 Assertion-Reason Questions (type: "ASSERTION_REASON") with standard 4 options:
-  ["Both A and R are true and R is correct explanation of A", "Both A and R are true but R is NOT correct explanation of A", "A is true but R is false", "A is false but R is true"].
-- Section C: 10 Very Short Answer Questions (type: "VSA", 2 marks each).
-- Section D: 8 Short Answer Questions (type: "SA", 3 marks each).
-- Section E: 5 Long Answer Questions (type: "LA", 5 marks each).
+Generate EXACTLY 43 questions:
+- 15 MCQs (type: "MCQ") with 4 options each.
+- 5 Assertion-Reason (type: "ASSERTION_REASON") with 4 standard options.
+- 10 Very Short Answer (type: "VSA", 2 marks).
+- 8 Short Answer (type: "SA", 3 marks).
+- 5 Long Answer (type: "LA", 5 marks).
 
-Return STRICTLY raw JSON (without markdown syntax or extra text):
+Return raw JSON only (no markdown backticks, keep answers concise key points):
 {
   "title": "${chapter}",
   "questions": [
@@ -254,8 +270,8 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
       "type": "MCQ",
       "question": "Question text",
       "options": ["A", "B", "C", "D"],
-      "correctAnswer": "Exact correct string matching one option",
-      "topicKeyword": "Topic summary"
+      "correctAnswer": "Exact option text",
+      "topicKeyword": "topic"
     },
     {
       "id": 16,
@@ -269,40 +285,40 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
         "A is false but R is true"
       ],
       "correctAnswer": "Both A and R are true and R is correct explanation of A",
-      "topicKeyword": "Topic summary"
+      "topicKeyword": "topic"
     },
     {
       "id": 21,
       "section": "Section C: Very Short Answer Questions (20 Marks)",
       "type": "VSA",
-      "question": "VSA question text",
+      "question": "Question text",
       "options": null,
-      "correctAnswer": "Ideal 1-2 points answer",
-      "topicKeyword": "Topic summary"
+      "correctAnswer": "Expected 2 points",
+      "topicKeyword": "topic"
     },
     {
       "id": 31,
       "section": "Section D: Short Answer Questions (24 Marks)",
       "type": "SA",
-      "question": "SA question text",
+      "question": "Question text",
       "options": null,
-      "correctAnswer": "Key 3 points expected",
-      "topicKeyword": "Topic summary"
+      "correctAnswer": "Expected 3 key points",
+      "topicKeyword": "topic"
     },
     {
       "id": 39,
       "section": "Section E: Long Answer Questions (25 Marks)",
       "type": "LA",
-      "question": "LA question text",
+      "question": "Question text",
       "options": null,
-      "correctAnswer": "Comprehensive CBSE marking points",
-      "topicKeyword": "Topic summary"
+      "correctAnswer": "Key criteria points",
+      "topicKeyword": "topic"
     }
   ]
 }
 `;
 
-        const resData = await callGeminiWithRetry(apiKey, prompt, updateStatus);
+        const resData = await callGemini(apiKey, prompt, updateStatus);
         let jsonText = resData.candidates[0].content.parts[0].text;
         jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(jsonText);
@@ -316,9 +332,19 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
         mainContent.innerHTML = `
           <div class="bg-red-950/40 border border-red-800 p-6 rounded-2xl text-center space-y-4">
             <p class="text-red-400 text-sm font-medium">Failed to generate paper: ${err.message}</p>
-            <button onclick="location.reload()" class="bg-slate-800 px-4 py-2 rounded-lg text-xs text-white">Try Again</button>
+            <div class="flex justify-center gap-3">
+              <button id="instant-retry-btn" class="bg-blue-600 hover:bg-blue-500 px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow">
+                Retry Now (Fast)
+              </button>
+              <button id="back-home-btn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2.5 rounded-xl text-xs text-slate-300">
+                Change Chapter
+              </button>
+            </div>
           </div>
         `;
+
+        document.getElementById("instant-retry-btn").onclick = () => triggerPaperGeneration(chapter, difficulty);
+        document.getElementById("back-home-btn").onclick = renderSetupScreen;
       }
     }
 
@@ -327,7 +353,6 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
       let html = "";
 
       currentQuestions.forEach((q, idx) => {
-        // Section Header
         if (q.section && q.section !== currentSection) {
           currentSection = q.section;
           html += `
@@ -417,7 +442,7 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
       try {
         const apiKey = await getGeminiKey();
 
-        // 1. Instant Objective Grading (MCQ + Assertion-Reason)
+        // 1. Instant MCQ & Assertion-Reason evaluation locally
         let breakdown = [];
         let score = 0;
         let subjectiveQuestions = [];
@@ -434,7 +459,7 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
               userAnswer: userAns || "Not Answered",
               correctAnswer: q.correctAnswer,
               isCorrect: isCorrect,
-              mistakeComment: isCorrect ? "Correct answer selected." : "Incorrect choice."
+              mistakeComment: isCorrect ? "Correct answer selected." : "Incorrect option choice."
             });
           } else {
             subjectiveQuestions.push({
@@ -447,31 +472,14 @@ Return STRICTLY raw JSON (without markdown syntax or extra text):
           }
         });
 
-        // 2. AI Grading for Subjective Answers (VSA, SA, LA)
+        // 2. AI grading for written subjective answers
         const evalPrompt = `
-You are a CBSE Board Examiner evaluating student's written answers.
-Grade these subjective questions strictly as per CBSE marking criteria:
+Evaluate these student answers as a CBSE Board Examiner:
 ${JSON.stringify(subjectiveQuestions)}
 
-Return STRICTLY raw JSON:
+Return raw JSON only:
 {
-  "subjectiveScore": 0,
-  "summary": "Brief 2-line overall feedback on conceptual strengths and weaknesses",
+  "summary": "Brief 2-sentence feedback",
   "evaluations": [
     {
-      "id": 21,
-      "isCorrect": true,
-      "mistakeComment": "Brief 1-sentence analysis of missing points or keywords"
-    }
-  ]
-}
-`;
-
-        const resData = await callGeminiWithRetry(apiKey, evalPrompt, (t) => {
-          const el = document.getElementById("eval-title");
-          if (el) el.innerText = t;
-        });
-
-        let jsonText = resData.candidates[0].content.parts[0].text;
-        jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const aiEval = JSON.parse(jsonT
+      "id": 2
