@@ -4,216 +4,187 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CBSE Class 10 Board Practice Hub</title>
+  
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #0b0f19;
       color: #f1f5f9;
       min-height: 100vh;
-      padding: 16px;
+      padding: 14px;
       line-height: 1.5;
     }
-    .app-container {
-      max-width: 720px;
-      margin: 0 auto;
-      padding-bottom: 90px;
-    }
+    .container { max-width: 720px; margin: 0 auto; padding-bottom: 90px; }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 0;
+      padding: 12px 0;
       border-bottom: 1px solid #1e293b;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
-    .title-gradient {
-      font-size: 20px;
+    .title {
+      font-size: 19px;
       font-weight: 800;
       background: linear-gradient(135deg, #38bdf8, #3b82f6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .badge {
-      font-size: 11px;
-      font-weight: 600;
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 4px 10px;
-      border-radius: 9999px;
-    }
     .card {
       background: #141e33;
       border: 1px solid #23324d;
       border-radius: 16px;
-      padding: 22px;
-      margin-bottom: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
     }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #cbd5e1;
-      margin-bottom: 8px;
-    }
+    label { display: block; font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
     input[type="text"], select, textarea {
       width: 100%;
       background: #0b0f19;
       border: 1px solid #2a3b5c;
       border-radius: 12px;
-      padding: 13px 15px;
+      padding: 13px 14px;
       color: #ffffff;
-      font-size: 15px;
+      font-size: 14px;
       outline: none;
-      transition: border-color 0.2s;
     }
-    input[type="text"]:focus, select:focus, textarea:focus {
-      border-color: #38bdf8;
-    }
-    .chips-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .chip {
-      background: #0b0f19;
-      border: 1px solid #2a3b5c;
-      color: #94a3b8;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .chip:active {
-      border-color: #38bdf8;
-      color: #38bdf8;
-    }
-    .info-box {
-      background: rgba(11, 15, 25, 0.8);
-      border: 1px solid #1e293b;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 12px;
-      color: #94a3b8;
-      margin: 18px 0;
-    }
-    .btn-primary {
+    input[type="text"]:focus, select:focus, textarea:focus { border-color: #38bdf8; }
+    .btn {
       width: 100%;
       background: linear-gradient(135deg, #2563eb, #06b6d4);
       color: #ffffff;
       font-size: 15px;
       font-weight: 700;
-      padding: 15px;
+      padding: 14px;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       touch-action: manipulation;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
     }
-    .btn-primary:active {
-      opacity: 0.9;
-      transform: scale(0.99);
+    .btn:active { opacity: 0.9; }
+    .btn-secondary {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
     }
-    .sticky-nav {
+    .chip {
+      background: #0b0f19;
+      border: 1px solid #2a3b5c;
+      color: #94a3b8;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 6px;
+      margin-right: 6px;
+      display: inline-block;
+    }
+    .chip:active { border-color: #38bdf8; color: #38bdf8; }
+    .info-list {
+      background: #0b0f19;
+      border: 1px solid #1e293b;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #94a3b8;
+      margin: 16px 0;
+    }
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0b0f19;
+      border: 1px solid #23324d;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .sticky-bar {
       position: sticky;
-      top: 10px;
+      top: 8px;
       z-index: 30;
       background: rgba(20, 30, 51, 0.95);
       backdrop-filter: blur(8px);
       border: 1px solid #23324d;
-      border-radius: 14px;
-      padding: 12px 16px;
+      border-radius: 12px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      margin-bottom: 16px;
     }
-    .section-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #38bdf8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 26px 0 12px 0;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #1e293b;
-    }
-    .option-label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .log-box {
       background: #0b0f19;
-      border: 1px solid #23324d;
-      padding: 12px 14px;
+      border: 1px solid #1e293b;
       border-radius: 10px;
-      margin-top: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      touch-action: manipulation;
+      padding: 14px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      text-align: left;
+      margin: 16px 0;
+      line-height: 1.8;
     }
-    .spinner {
-      width: 38px;
-      height: 38px;
-      border: 4px solid #38bdf8;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px auto;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+
+  <!-- Official Firebase SDK (Safe Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-  <div class="app-container">
+  <div class="container">
     <header>
       <div>
-        <h1 class="title-gradient">CBSE Board Practice Hub</h1>
-        <p style="font-size: 12px; color: #64748b;">Class 10 Smart Mock System • 43 Questions</p>
+        <h1 class="title">CBSE Board Practice Hub</h1>
+        <p style="font-size: 11px; color: #64748b;">Class 10 Smart Mock System • 43 Questions</p>
       </div>
-      <div>
-        <span class="badge">● Online</span>
+      <div id="auth-status-container">
+        <button id="auth-btn" class="btn-secondary" onclick="handleAuthAction()">Google Sign-In</button>
       </div>
     </header>
 
-    <main id="app-body">
-      <!-- Setup Panel (Rendered immediately on load) -->
+    <main id="app-view">
+      <!-- Setup Screen -->
       <div class="card">
-        <div style="margin-bottom: 18px;">
+        <div style="margin-bottom: 16px;">
           <label>Subject / Chapter Name</label>
-          <input type="text" id="target-chapter" value="Science: Chemical Reactions and Equations" placeholder="Enter chapter name..." />
-          <div class="chips-row">
-            <span style="font-size: 11px; color: #64748b; align-self: center;">Quick pick:</span>
-            <button class="chip" onclick="setQuickTopic('Science: Chemical Reactions and Equations')">🧪 Chemical Reactions</button>
-            <button class="chip" onclick="setQuickTopic('Science: Electricity')">⚡ Electricity</button>
-            <button class="chip" onclick="setQuickTopic('Science: Life Processes')">🧬 Life Processes</button>
-            <button class="chip" onclick="setQuickTopic('Science: Light - Reflection and Refraction')">💡 Light</button>
+          <input type="text" id="chapter-input" value="Science: Chemical Reactions and Equations" placeholder="Enter chapter name..." />
+          <div style="margin-top: 8px;">
+            <button class="chip" onclick="setTopic('Science: Chemical Reactions and Equations')">🧪 Chemical Reactions</button>
+            <button class="chip" onclick="setTopic('Science: Electricity')">⚡ Electricity</button>
+            <button class="chip" onclick="setTopic('Science: Life Processes')">🧬 Life Processes</button>
+            <button class="chip" onclick="setTopic('Science: Light')">💡 Light</button>
           </div>
         </div>
 
-        <div style="margin-bottom: 18px;">
+        <div style="margin-bottom: 16px;">
           <label>Paper Difficulty</label>
-          <select id="target-difficulty">
+          <select id="diff-select">
             <option value="Standard CBSE Board Pattern (PYQs + Competency)">Standard Board Pattern (PYQ + Competency)</option>
-            <option value="Fundamental & Concept Clarity">Fundamental & Basic Concepts</option>
-            <option value="High Order (HOTS) & Competency Based">High Order (HOTS) & Competency Based</option>
+            <option value="Fundamental & Basic Concepts">Fundamental & Basic Concepts</option>
+            <option value="High Order Thinking (HOTS)">High Order Thinking (HOTS)</option>
           </select>
         </div>
 
-        <div class="info-box">
-          <p style="font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">📄 Complete 43-Question Board Structure:</p>
-          <p>• Section A: 15 Multiple Choice Questions (1 Mark)</p>
-          <p>• Section B: 5 Assertion-Reason Questions (1 Mark)</p>
+        <div class="info-list">
+          <p style="color: #cbd5e1; font-weight: 700; margin-bottom: 4px;">📄 Complete 43-Question Board Paper:</p>
+          <p>• Section A: 15 MCQs (1 Mark)</p>
+          <p>• Section B: 5 Assertion-Reason (1 Mark)</p>
           <p>• Section C: 10 Very Short Answers - VSA (2 Marks)</p>
           <p>• Section D: 8 Short Answers - SA (3 Marks)</p>
           <p>• Section E: 5 Long Answers - LA (5 Marks)</p>
         </div>
 
-        <button class="btn-primary" id="start-btn" onclick="startGenerationFlow()">
+        <button class="btn" id="generate-btn" onclick="startExamGeneration()">
           Generate Full Board Paper (43 Questions)
         </button>
       </div>
@@ -221,159 +192,225 @@
   </div>
 
   <script>
-    // Bulletproof direct key injection
-    const k1 = "AQ.Ab8RN6K";
-    const k2 = "PedmXMdMrw";
-    const k3 = "PB2oiuXf2ullV";
-    const k4 = "_NKVJZ1Ntium7l";
-    const k5 = "-v3qYw";
-    const GEMINI_KEY = k1 + k2 + k3 + k4 + k5;
+    // Firebase Init
+    const firebaseConfig = {
+      apiKey: "AIzaSyAveLxGKaflyzauKoivpxW_XBKFzylgRfs",
+      authDomain: "cbse-practice-5c956.firebaseapp.com",
+      projectId: "cbse-practice-5c956",
+      storageBucket: "cbse-practice-5c956.firebasestorage.app",
+      messagingSenderId: "264196286802",
+      appId: "1:264196286802:web:e4485efa3e2720559bf28b"
+    };
 
-    let examQuestions = [];
-    let studentAnswers = {};
-    let currentChapterTitle = "";
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    function setQuickTopic(name) {
-      const input = document.getElementById("target-chapter");
-      if (input) input.value = name;
+    let currentUser = null;
+    let cachedApiKey = localStorage.getItem("saved_gemini_key") || "";
+    let questionsData = [];
+    let studentResponses = {};
+    let activeChapter = "";
+
+    function setTopic(t) {
+      document.getElementById("chapter-input").value = t;
     }
 
-    async function callGeminiAPI(promptText) {
-      const models = ["gemini-flash-latest", "gemini-2.0-flash"];
-      let lastErrMsg = "";
-
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        for (const model of models) {
-          try {
-            const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-goog-api-key": GEMINI_KEY
-              },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }],
-                generationConfig: {
-                  responseMimeType: "application/json",
-                  temperature: 0.5
-                }
-              })
-            });
-
-            const data = await res.json();
-            if (data.candidates && data.candidates[0]) {
-              let txt = data.candidates[0].content.parts[0].text;
-              txt = txt.replace(/```json/gi, '').replace(/```/gi, '').trim();
-              return JSON.parse(txt);
-            }
-            if (data.error) lastErrMsg = data.error.message;
-          } catch(err) {
-            lastErrMsg = err.message;
+    // Auto-listen to Google Login and sync key from Firestore
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      const authBox = document.getElementById("auth-status-container");
+      if (user) {
+        authBox.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; color:#38bdf8;">${user.displayName ? user.displayName.split(' ')[0] : 'Student'}</span>
+            <button class="btn-secondary" onclick="auth.signOut()">Logout</button>
+          </div>
+        `;
+        // Fetch key from Firestore settings/api
+        try {
+          const docSnap = await db.collection("settings").doc("api").get();
+          if (docSnap.exists && docSnap.data().geminiKey) {
+            cachedApiKey = docSnap.data().geminiKey.trim();
+            localStorage.setItem("saved_gemini_key", cachedApiKey);
+            console.log("Key successfully synced from Firestore!");
           }
-          await new Promise(r => setTimeout(r, 400));
+        } catch(e) {
+          console.warn("Firestore sync notice:", e);
         }
-        await new Promise(r => setTimeout(r, 1200));
+      } else {
+        authBox.innerHTML = `<button class="btn-secondary" onclick="handleAuthAction()">Google Sign-In</button>`;
       }
-      throw new Error(lastErrMsg || "Server busy. Please try again.");
+    });
+
+    async function handleAuthAction() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await auth.signInWithPopup(provider);
+      } catch(err) {
+        console.warn("Sign-in notice:", err);
+      }
     }
 
-    async function startGenerationFlow() {
-      const chapterInput = document.getElementById("target-chapter");
-      const diffSelect = document.getElementById("target-difficulty");
-      const btn = document.getElementById("start-btn");
+    // Direct Gemini Call with verified gemini-2.0-flash
+    async function requestGemini(apiKey, promptText) {
+      const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+      let lastErr = "";
 
-      const chapter = chapterInput ? chapterInput.value.trim() : "";
-      const difficulty = diffSelect ? diffSelect.value : "";
+      for (const model of models) {
+        try {
+          const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.5
+              }
+            })
+          });
+
+          const data = await res.json();
+          if (data.candidates && data.candidates[0]) {
+            let txt = data.candidates[0].content.parts[0].text;
+            txt = txt.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            return JSON.parse(txt);
+          }
+          if (data.error) lastErr = data.error.message;
+        } catch(e) {
+          lastErr = e.message;
+        }
+      }
+      throw new Error(lastErr || "Could not generate questions. Please retry.");
+    }
+
+    async function startExamGeneration() {
+      const chapter = document.getElementById("chapter-input").value.trim();
+      const diff = document.getElementById("diff-select").value;
 
       if (!chapter) {
-        alert("Please enter a chapter name first.");
+        alert("Please enter a chapter name");
         return;
       }
+      activeChapter = chapter;
 
-      currentChapterTitle = chapter;
-
-      // Visual progress feedback
-      if (btn) {
-        btn.disabled = true;
-        btn.innerText = "⏳ Drafting Paper...";
+      // Check if key is available
+      if (!cachedApiKey) {
+        // Try getting from Firestore if logged in
+        if (currentUser) {
+          try {
+            const snap = await db.collection("settings").doc("api").get();
+            if (snap.exists && snap.data().geminiKey) {
+              cachedApiKey = snap.data().geminiKey.trim();
+              localStorage.setItem("saved_gemini_key", cachedApiKey);
+            }
+          } catch(e){}
+        }
       }
 
-      const main = document.getElementById("app-body");
+      // If still no key, ask the user directly right here (No freeze, no deadlock)
+      if (!cachedApiKey) {
+        const inputKey = prompt("Please enter or paste your Gemini API Key once (it will be saved for all future practice tests):");
+        if (!inputKey || !inputKey.trim()) {
+          alert("API Key is required to generate the paper.");
+          return;
+        }
+        cachedApiKey = inputKey.trim();
+        localStorage.setItem("saved_gemini_key", cachedApiKey);
+      }
+
+      const main = document.getElementById("app-view");
       main.innerHTML = `
-        <div style="text-align: center; padding: 60px 0;">
-          <div class="spinner"></div>
-          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Generating 43-Question CBSE Exam Paper...</h3>
-          <p style="font-size: 12px; color: #94a3b8;">Section A to Section E • Anti-Repetition Engine Active</p>
+        <div class="card" style="text-align: center; padding: 30px 20px;">
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Drafting 43-Question CBSE Board Paper</h3>
+          <div id="live-logs" class="log-box">Connecting to Gemini AI engine...</div>
         </div>
       `;
+
+      const logBox = document.getElementById("live-logs");
+      const addLog = (m) => { logBox.innerHTML += "<br/>" + m; };
 
       try {
         const storageKey = "history_" + chapter.toLowerCase().replace(/[^a-z0-9]/g, "_");
         let excluded = [];
         try {
           excluded = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        } catch(e) {}
+        } catch(e){}
 
-        // Concurrent Batch 1: Objective (20 Questions)
+        // Two-Stage Generation to prevent High Demand 503
+        addLog("▶ [Stage 1/2] Drafting Section A & B (20 Objective Questions)...");
         const prompt1 = `
-CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${difficulty}. Avoid: ${JSON.stringify(excluded.slice(-20))}.
+CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${diff}. Exclude: ${JSON.stringify(excluded.slice(-20))}.
 Generate 20 Objective Questions:
 - 15 MCQs (Section A, id: 1 to 15, type: "MCQ", 4 options)
 - 5 Assertion-Reason (Section B, id: 16 to 20, type: "ASSERTION_REASON", 4 options: ["Both A and R are true and R is correct explanation of A", "Both A and R are true but R is NOT correct explanation of A", "A is true but R is false", "A is false but R is true"])
-Return strictly RAW JSON only:
-{"questions": [{"id": 1, "section": "Section A: Multiple Choice Questions (15 Marks)", "type": "MCQ", "question": "Question text", "options": ["A","B","C","D"], "correctAnswer": "Option text", "topicKeyword": "topic"}]}`;
+Return strictly RAW JSON:
+{"questions": [{"id": 1, "section": "Section A: Multiple Choice Questions (15 Marks)", "type": "MCQ", "question": "...", "options": ["A","B","C","D"], "correctAnswer": "...", "topicKeyword": "topic"}]}`;
 
-        // Concurrent Batch 2: Subjective (23 Questions)
+        const resObj = await requestGemini(cachedApiKey, prompt1);
+        addLog("✓ Section A & B ready (" + (resObj.questions ? resObj.questions.length : 0) + " questions)!");
+
+        addLog("▶ [Stage 2/2] Drafting Section C, D, E (23 Subjective Questions)...");
         const prompt2 = `
-CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${difficulty}. Avoid: ${JSON.stringify(excluded.slice(-20))}.
+CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${diff}. Exclude: ${JSON.stringify(excluded.slice(-20))}.
 Generate 23 Subjective Questions:
 - 10 Very Short Answer (Section C, id: 21 to 30, type: "VSA", 2 marks)
 - 8 Short Answer (Section D, id: 31 to 38, type: "SA", 3 marks)
 - 5 Long Answer (Section E, id: 39 to 43, type: "LA", 5 marks)
-Return strictly RAW JSON only:
-{"questions": [{"id": 21, "section": "Section C: Very Short Answer Questions (20 Marks)", "type": "VSA", "question": "Question text", "options": null, "correctAnswer": "Expected 2 points", "topicKeyword": "topic"}]}`;
+Return strictly RAW JSON:
+{"questions": [{"id": 21, "section": "Section C: Very Short Answer Questions (20 Marks)", "type": "VSA", "question": "...", "options": null, "correctAnswer": "Key criteria points", "topicKeyword": "topic"}]}`;
 
-        // Fast parallel execution (both finish in ~4s)
-        const [res1, res2] = await Promise.all([
-          callGeminiAPI(prompt1),
-          callGeminiAPI(prompt2)
-        ]);
+        const resSub = await requestGemini(cachedApiKey, prompt2);
+        addLog("✓ Section C, D, E ready (" + (resSub.questions ? resSub.questions.length : 0) + " questions)!");
 
-        examQuestions = [...(res1.questions || []), ...(res2.questions || [])];
-        studentAnswers = {};
-        renderTestPaper();
+        questionsData = [...(resObj.questions || []), ...(resSub.questions || [])];
+        studentResponses = {};
 
-      } catch (error) {
-        console.error(error);
-        main.innerHTML = `
-          <div class="card" style="border-color: #991b1b; text-align: center;">
-            <p style="color: #f87171; font-size: 14px; margin-bottom: 16px;">Generation Notice: ${error.message}</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-              <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="startGenerationFlow()">Retry Now</button>
-              <button class="chip" style="padding: 10px 20px;" onclick="renderSetupHome()">Change Chapter</button>
-            </div>
+        addLog("✓ Finalizing complete paper...");
+        setTimeout(() => renderExamPaper(), 400);
+
+      } catch (err) {
+        console.error(err);
+        addLog("<span style='color: #f87171;'>❌ " + err.message + "</span>");
+        main.innerHTML += `
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px;">
+            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="resetApiKey()">Reset / Re-enter API Key</button>
+            <button class="btn-secondary" style="padding: 10px 20px;" onclick="location.reload()">Retry Home</button>
           </div>
         `;
       }
     }
 
-    function renderTestPaper() {
-      const main = document.getElementById("app-body");
+    function resetApiKey() {
+      localStorage.removeItem("saved_gemini_key");
+      cachedApiKey = "";
+      alert("API Key cleared. When you click Generate, it will ask for the fresh key.");
+      location.reload();
+    }
+
+    function renderExamPaper() {
+      const main = document.getElementById("app-view");
       let curSection = "";
       let questionsHtml = "";
 
-      examQuestions.forEach((q, idx) => {
+      questionsData.forEach((q, idx) => {
         if (q.section && q.section !== curSection) {
           curSection = q.section;
-          questionsHtml += `<div class="section-title">${curSection}</div>`;
+          questionsHtml += `
+            <div style="font-size: 13px; font-weight: 800; color: #38bdf8; text-transform: uppercase; margin: 24px 0 10px 0; border-bottom: 1px solid #1e293b; padding-bottom: 4px;">
+              ${curSection}
+            </div>
+          `;
         }
 
         let inputMarkup = "";
         if (q.options && q.options.length > 0) {
           inputMarkup = `
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 8px;">
               ${q.options.map(opt => `
-                <label class="option-label">
+                <label class="option-row">
                   <input type="radio" name="q_${q.id}" value="${opt.replace(/"/g, '&quot;')}" onchange="recordAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}')" />
                   <span>${opt}</span>
                 </label>
@@ -381,19 +418,19 @@ Return strictly RAW JSON only:
             </div>
           `;
         } else {
-          const height = q.type === 'LA' ? '130px' : q.type === 'SA' ? '90px' : '65px';
+          const height = q.type === 'LA' ? '120px' : q.type === 'SA' ? '85px' : '65px';
           inputMarkup = `
-            <div style="margin-top: 10px;">
-              <textarea style="min-height: ${height};" placeholder="Write your points here..." oninput="recordAnswer(${q.id}, this.value)"></textarea>
+            <div style="margin-top: 8px;">
+              <textarea style="min-height: ${height};" placeholder="Write key points here..." oninput="recordAnswer(${q.id}, this.value)"></textarea>
             </div>
           `;
         }
 
         questionsHtml += `
-          <div class="card" style="margin-bottom: 12px; padding: 18px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <div class="card" style="margin-bottom: 12px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #38bdf8; background: #0b0f19; padding: 2px 8px; border-radius: 6px;">${q.type}</span>
-              <span style="font-size: 11px; color: #64748b; font-family: monospace;">Q${idx + 1} / ${examQuestions.length}</span>
+              <span style="font-size: 11px; color: #64748b; font-family: monospace;">Q${idx + 1} / ${questionsData.length}</span>
             </div>
             <p style="font-size: 14px; font-weight: 600; white-space: pre-line;">${q.question}</p>
             ${inputMarkup}
@@ -403,19 +440,19 @@ Return strictly RAW JSON only:
 
       main.innerHTML = `
         <div>
-          <div class="sticky-nav">
+          <div class="sticky-bar">
             <div>
-              <p style="font-size: 13px; font-weight: 700; color: #ffffff;">${currentChapterTitle}</p>
-              <p id="ans-tracker" style="font-size: 11px; color: #38bdf8;">0 / ${examQuestions.length} Answered</p>
+              <p style="font-size: 12px; font-weight: 700; color: #ffffff;">${activeChapter}</p>
+              <p id="ans-count" style="font-size: 11px; color: #38bdf8;">0 / ${questionsData.length} Answered</p>
             </div>
-            <button class="btn-primary" style="width: auto; padding: 8px 16px; font-size: 12px; background: #059669;" onclick="evaluateExamPaper()">
+            <button class="btn" style="width: auto; padding: 8px 16px; font-size: 12px; background: #059669;" onclick="evaluateSubmission()">
               Submit Paper
             </button>
           </div>
 
           <div>${questionsHtml}</div>
 
-          <button class="btn-primary" style="margin-top: 14px; padding: 16px; background: #059669;" onclick="evaluateExamPaper()">
+          <button class="btn" style="margin-top: 16px; background: #059669;" onclick="evaluateSubmission()">
             Submit Complete Paper & Evaluate
           </button>
         </div>
@@ -423,30 +460,29 @@ Return strictly RAW JSON only:
     }
 
     window.recordAnswer = function(id, val) {
-      studentAnswers[id] = val;
-      const count = Object.values(studentAnswers).filter(v => v && v.trim && v.trim().length > 0).length;
-      const tracker = document.getElementById("ans-tracker");
-      if (tracker) tracker.innerText = count + " / " + examQuestions.length + " Answered";
+      studentResponses[id] = val;
+      const count = Object.values(studentResponses).filter(v => v && v.trim && v.trim().length > 0).length;
+      const el = document.getElementById("ans-count");
+      if (el) el.innerText = count + " / " + questionsData.length + " Answered";
     };
 
-    async function evaluateExamPaper() {
-      const main = document.getElementById("app-body");
+    async function evaluateSubmission() {
+      const main = document.getElementById("app-view");
       main.innerHTML = `
-        <div style="text-align: center; padding: 60px 0;">
-          <div class="spinner" style="border-top-color: #059669;"></div>
-          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">AI Examiner Evaluating Paper...</h3>
-          <p style="font-size: 12px; color: #94a3b8;">Step marking as per CBSE Class 10 marking scheme</p>
+        <div class="card" style="text-align: center; padding: 40px 20px;">
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">AI Grading Your Exam Paper</h3>
+          <p style="font-size: 12px; color: #94a3b8;">Evaluating answers as per CBSE Class 10 step-marking guidelines...</p>
         </div>
       `;
 
       try {
         let score = 0;
         let breakdown = [];
-        let writtenQuestions = [];
+        let writtenList = [];
 
-        // Instant local grading for Section A & B
-        examQuestions.forEach(q => {
-          const ans = (studentAnswers[q.id] || "").trim();
+        // Instant local checking for Section A & B
+        questionsData.forEach(q => {
+          const ans = (studentResponses[q.id] || "").trim();
           if (q.type === 'MCQ' || q.type === 'ASSERTION_REASON') {
             const isRight = ans.toLowerCase() === (q.correctAnswer || "").trim().toLowerCase();
             if (isRight) score += 1;
@@ -457,10 +493,10 @@ Return strictly RAW JSON only:
               userAnswer: ans || "Not Answered",
               correctAnswer: q.correctAnswer,
               isCorrect: isRight,
-              note: isRight ? "Correct choice selected." : "Incorrect option choice."
+              note: isRight ? "Correct answer." : "Incorrect choice."
             });
           } else {
-            writtenQuestions.push({
+            writtenList.push({
               id: q.id,
               type: q.type,
               question: q.question,
@@ -470,63 +506,18 @@ Return strictly RAW JSON only:
           }
         });
 
+        // AI Check for Section C, D, E
         const evalPrompt = `
-CBSE Board Examiner. Grade these written student answers:
-${JSON.stringify(writtenQuestions)}
-Return RAW JSON only:
-{"summary": "2-line overall performance feedback", "evaluations": [{"id": 21, "isCorrect": true, "note": "1-sentence note"}]}`;
+CBSE Board Examiner. Evaluate these subjective answers:
+${JSON.stringify(writtenList)}
+Return strictly RAW JSON:
+{"summary": "Brief 2-line performance summary", "evaluations": [{"id": 21, "isCorrect": true, "note": "1-sentence note"}]}`;
 
-        const aiEval = await callGeminiAPI(evalPrompt);
+        const aiEval = await requestGemini(cachedApiKey, evalPrompt);
         const evalMap = {};
         (aiEval.evaluations || []).forEach(e => { evalMap[e.id] = e; });
 
-        writtenQuestions.forEach(sq => {
-          const e = evalMap[sq.id] || { isCorrect: false, note: "Reviewed." };
+        writtenList.forEach(sq => {
+          const e = evalMap[sq.id] || { isCorrect: false, note: "Evaluated." };
           if (e.isCorrect) score += 1;
           breakdown.push({
-            id: sq.id,
-            type: sq.type,
-            question: sq.question,
-            userAnswer: sq.userAnswer || "Not Answered",
-            correctAnswer: sq.correctAnswer,
-            isCorrect: e.isCorrect,
-            note: e.note
-          });
-        });
-
-        breakdown.sort((a, b) => a.id - b.id);
-        const total = examQuestions.length;
-        const percentage = Math.round((score / total) * 100);
-
-        // Anti-repetition saving
-        const storageKey = "history_" + currentChapterTitle.toLowerCase().replace(/[^a-z0-9]/g, "_");
-        try {
-          const newTopics = examQuestions.map(q => q.topicKeyword || q.question.substring(0, 30));
-          let existing = JSON.parse(localStorage.getItem(storageKey) || "[]");
-          existing = [...existing, ...newTopics];
-          localStorage.setItem(storageKey, JSON.stringify(existing));
-        } catch(e) {}
-
-        renderResults(score, total, percentage, aiEval.summary || "Good practice session! Review your errors below.", breakdown);
-
-      } catch(err) {
-        console.error(err);
-        alert("Evaluation took too long. Returning to setup screen.");
-        renderSetupHome();
-      }
-    }
-
-    function renderResults(score, total, percentage, summary, breakdown) {
-      const main = document.getElementById("app-body");
-      let breakdownHtml = breakdown.map(b => `
-        <div class="card" style="padding: 16px; margin-bottom: 12px; border-color: ${b.isCorrect ? '#065f46' : '#991b1b'};">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px;">
-            <span style="font-weight: 700; color: ${b.isCorrect ? '#34d399' : '#f87171'};">
-              ${b.isCorrect ? '✓ Correct' : '✕ Needs Improvement'}
-            </span>
-            <span style="color: #64748b; font-family: monospace;">${b.type}</span>
-          </div>
-          <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">${b.question}</p>
-          <div style="font-size: 12px; color: #94a3b8; display: flex; flex-direction: column; gap: 3px;">
-            <p><strong style="color: #cbd5e1;">Your Answer:</strong> ${b.userAnswer}</p>
-            <p><strong style="color: #cbd5e1;">Model Answer:</strong>
