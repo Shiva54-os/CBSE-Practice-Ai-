@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CBSE Class 10 Practice Hub</title>
+  <title>CBSE Class 10 Board Examination Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -12,14 +12,14 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
-  <div id="app" class="max-w-3xl mx-auto p-4 md:p-6 pb-24">
+  <div id="app" class="max-w-3xl mx-auto p-4 md:p-6 pb-28">
     <!-- Header -->
     <header class="flex justify-between items-center py-4 border-b border-slate-800 mb-6">
       <div>
         <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
           CBSE Board Practice Hub
         </h1>
-        <p class="text-xs text-slate-400">Class 10 Smart Revision & Non-Repetition System</p>
+        <p class="text-xs text-slate-400">Class 10 Smart Mock System • No Repetition</p>
       </div>
       <div id="auth-container"></div>
     </header>
@@ -80,7 +80,7 @@
       throw new Error("Gemini key not found in Firebase Firestore.");
     }
 
-    // Bulletproof Auto-Retry on verified model
+    // High Reliability Gemini Caller with auto-retry
     async function callGeminiWithRetry(apiKey, prompt, updateStatus) {
       const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
       const maxRetries = 4;
@@ -90,8 +90,8 @@
         try {
           if (updateStatus) {
             updateStatus(attempt === 1 
-              ? "Generating CBSE Exam Paper..." 
-              : `High demand on AI server, auto-connecting... (Attempt ${attempt}/${maxRetries})`
+              ? "Drafting Full CBSE Paper (43 Questions)..." 
+              : `Optimizing connection... (Attempt ${attempt}/${maxRetries})`
             );
           }
 
@@ -105,7 +105,7 @@
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: { 
                 responseMimeType: "application/json",
-                temperature: 0.7
+                temperature: 0.6
               }
             })
           });
@@ -117,18 +117,17 @@
 
           if (data.error) {
             lastErrorMessage = data.error.message;
-            console.warn(`Attempt ${attempt} rush/error:`, data.error.message);
+            console.warn(`Attempt ${attempt} error:`, data.error.message);
           }
         } catch (err) {
           lastErrorMessage = err.message;
           console.warn(`Network error on attempt ${attempt}:`, err);
         }
 
-        // 2.5 second silent pause to let server traffic clear
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        await new Promise((r) => setTimeout(r, 2000));
       }
 
-      throw new Error(lastErrorMessage || "Server is experiencing heavy traffic. Please click Try Again.");
+      throw new Error(lastErrorMessage || "High traffic on AI servers. Please try again.");
     }
 
     function renderAuthButton() {
@@ -157,7 +156,7 @@
         <div class="bg-slate-800/60 border border-slate-700/60 p-8 rounded-2xl text-center my-12 backdrop-blur">
           <h2 class="text-2xl font-bold mb-3 text-white">Target 95%+ in Class 10 Boards</h2>
           <p class="text-slate-400 text-sm max-w-md mx-auto mb-6">
-            Log in with Google to practice CBSE questions without repetition.
+            Practice full-length 43-question CBSE board papers (MCQs, Assertion-Reason, VSA, Short & Long Answers) with AI step evaluation.
           </p>
           <button id="hero-login-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-3 rounded-xl transition shadow-lg shadow-blue-500/20">
             Sign In with Google to Start Practice
@@ -177,16 +176,25 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-300 mb-2">Difficulty Level</label>
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Paper Difficulty</label>
             <select id="difficulty-input" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
-              <option value="Standard Board Pattern (80% Exam + 20% Basics)">Standard Board Pattern (Recommended)</option>
-              <option value="Fundamental & Basic Questions Only">Fundamental & Basic Questions Only</option>
-              <option value="High Order (HOTS) & Competency Based">High Order (HOTS) & Competency Based</option>
+              <option value="Standard CBSE Board Pattern (PYQs + Competency)">Standard Board Pattern (PYQ + Competency)</option>
+              <option value="Fundamental & Concept Clarity">Fundamental & Basic Concepts</option>
+              <option value="Tough / High Order Thinking (HOTS)">High Order Thinking (HOTS) & Critical Analysis</option>
             </select>
           </div>
 
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+            <p class="font-semibold text-slate-300">📄 Paper Composition (43 Total Questions):</p>
+            <p>• Section A: 15 MCQs (1 Mark)</p>
+            <p>• Section B: 5 Assertion-Reason (1 Mark)</p>
+            <p>• Section C: 10 Very Short Answers - VSA (2 Marks)</p>
+            <p>• Section D: 8 Short Answers - SA (3 Marks)</p>
+            <p>• Section E: 5 Long Answers - LA (5 Marks)</p>
+          </div>
+
           <button id="start-btn" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-cyan-500/10">
-            Start Practice
+            Generate Full Board Paper
           </button>
         </div>
       `;
@@ -206,7 +214,7 @@
       mainContent.innerHTML = `
         <div class="text-center py-20 space-y-4">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-cyan-500 border-t-transparent"></div>
-          <h3 id="loader-title" class="text-lg font-semibold text-white">Generating CBSE Exam Questions...</h3>
+          <h3 id="loader-title" class="text-lg font-semibold text-white">Drafting Full CBSE Paper (43 Questions)...</h3>
           <p id="loader-sub" class="text-xs text-slate-400">Verifying past questions from your account to avoid repetition.</p>
         </div>
       `;
@@ -224,32 +232,36 @@
         const excludedTopics = historySnap.exists() ? historySnap.data().topics || [] : [];
 
         const prompt = `
-You are a senior CBSE Class 10 Board Examiner. Create a practice test for Chapter: "${chapter}".
+You are an expert CBSE Class 10 Board Examiner. Create a comprehensive, full-scale practice examination for Chapter: "${chapter}".
 Difficulty Level: ${difficulty}.
-DO NOT repeat these topics already solved: ${JSON.stringify(excludedTopics.slice(-25))}.
+DO NOT repeat these topics already solved by the user: ${JSON.stringify(excludedTopics.slice(-40))}.
 
-Generate:
-- 5 MCQs
-- 2 Assertion-Reason Questions
-- 2 Short Answer (SA)
-- 1 Long Answer (LA)
+Generate EXACTLY 43 questions following this CBSE pattern:
+- Section A: 15 Multiple Choice Questions (type: "MCQ") with 4 options each.
+- Section B: 5 Assertion-Reason Questions (type: "ASSERTION_REASON") with standard 4 options:
+  ["Both A and R are true and R is correct explanation of A", "Both A and R are true but R is NOT correct explanation of A", "A is true but R is false", "A is false but R is true"].
+- Section C: 10 Very Short Answer Questions (type: "VSA", 2 marks each).
+- Section D: 8 Short Answer Questions (type: "SA", 3 marks each).
+- Section E: 5 Long Answer Questions (type: "LA", 5 marks each).
 
-Return STRICTLY raw JSON (without markdown backticks):
+Return STRICTLY raw JSON (without markdown syntax or extra text):
 {
   "title": "${chapter}",
   "questions": [
     {
       "id": 1,
-      "type": "MCQ", 
+      "section": "Section A: Multiple Choice Questions (15 Marks)",
+      "type": "MCQ",
       "question": "Question text",
       "options": ["A", "B", "C", "D"],
-      "correctAnswer": "A",
+      "correctAnswer": "Exact correct string matching one option",
       "topicKeyword": "Topic summary"
     },
     {
-      "id": 2,
+      "id": 16,
+      "section": "Section B: Assertion and Reason (5 Marks)",
       "type": "ASSERTION_REASON",
-      "question": "Assertion (A): ... Reason (R): ...",
+      "question": "Assertion (A): ... \\nReason (R): ...",
       "options": [
         "Both A and R are true and R is correct explanation of A",
         "Both A and R are true but R is NOT correct explanation of A",
@@ -260,19 +272,30 @@ Return STRICTLY raw JSON (without markdown backticks):
       "topicKeyword": "Topic summary"
     },
     {
-      "id": 3,
-      "type": "SHORT_ANSWER",
-      "question": "Question text (3 marks)",
+      "id": 21,
+      "section": "Section C: Very Short Answer Questions (20 Marks)",
+      "type": "VSA",
+      "question": "VSA question text",
       "options": null,
-      "correctAnswer": "Key points expected",
+      "correctAnswer": "Ideal 1-2 points answer",
       "topicKeyword": "Topic summary"
     },
     {
-      "id": 4,
-      "type": "LONG_ANSWER",
-      "question": "Descriptive question (5 marks)",
+      "id": 31,
+      "section": "Section D: Short Answer Questions (24 Marks)",
+      "type": "SA",
+      "question": "SA question text",
       "options": null,
-      "correctAnswer": "Marking scheme points",
+      "correctAnswer": "Key 3 points expected",
+      "topicKeyword": "Topic summary"
+    },
+    {
+      "id": 39,
+      "section": "Section E: Long Answer Questions (25 Marks)",
+      "type": "LA",
+      "question": "LA question text",
+      "options": null,
+      "correctAnswer": "Comprehensive CBSE marking points",
       "topicKeyword": "Topic summary"
     }
   ]
@@ -292,7 +315,7 @@ Return STRICTLY raw JSON (without markdown backticks):
         console.error(err);
         mainContent.innerHTML = `
           <div class="bg-red-950/40 border border-red-800 p-6 rounded-2xl text-center space-y-4">
-            <p class="text-red-400 text-sm font-medium">Failed to generate test: ${err.message}</p>
+            <p class="text-red-400 text-sm font-medium">Failed to generate paper: ${err.message}</p>
             <button onclick="location.reload()" class="bg-slate-800 px-4 py-2 rounded-lg text-xs text-white">Try Again</button>
           </div>
         `;
@@ -300,9 +323,21 @@ Return STRICTLY raw JSON (without markdown backticks):
     }
 
     function renderTestScreen(chapterTitle, safeChapterId) {
-      let questionsHtml = currentQuestions.map((q, idx) => {
-        let inputArea = '';
+      let currentSection = "";
+      let html = "";
 
+      currentQuestions.forEach((q, idx) => {
+        // Section Header
+        if (q.section && q.section !== currentSection) {
+          currentSection = q.section;
+          html += `
+            <div class="pt-6 pb-2 border-b border-slate-700/80 mb-3">
+              <h3 class="text-sm md:text-base font-bold text-cyan-400 uppercase tracking-wide">${currentSection}</h3>
+            </div>
+          `;
+        }
+
+        let inputArea = '';
         if (q.options && q.options.length > 0) {
           inputArea = `
             <div class="space-y-2 mt-3">
@@ -315,50 +350,54 @@ Return STRICTLY raw JSON (without markdown backticks):
             </div>
           `;
         } else {
+          const height = q.type === 'LA' ? 'min-h-[140px]' : q.type === 'SA' ? 'min-h-[100px]' : 'min-h-[70px]';
           inputArea = `
             <div class="mt-3">
               <textarea placeholder="Type your answer here..." oninput="window.saveAnswer(${q.id}, this.value)"
-                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 min-h-[90px]"></textarea>
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 ${height}"></textarea>
             </div>
           `;
         }
 
-        return `
-          <div class="bg-slate-800/40 border border-slate-700/60 p-5 rounded-2xl">
+        html += `
+          <div class="bg-slate-800/40 border border-slate-700/60 p-5 rounded-2xl mb-4">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-700 text-cyan-400">${q.type.replace('_', ' ')}</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-700 text-cyan-400">${q.type}</span>
               <span class="text-xs text-slate-400 font-mono">Q${idx + 1} / ${currentQuestions.length}</span>
             </div>
-            <p class="text-white text-sm font-medium mt-1 leading-relaxed">${q.question}</p>
+            <p class="text-white text-sm font-medium mt-1 leading-relaxed whitespace-pre-line">${q.question}</p>
             ${inputArea}
           </div>
         `;
-      }).join('');
+      });
 
       mainContent.innerHTML = `
         <div class="space-y-6">
-          <div class="flex justify-between items-center bg-slate-800/80 p-4 rounded-xl border border-slate-700 sticky top-2 backdrop-blur z-10">
+          <div class="flex justify-between items-center bg-slate-800/90 p-4 rounded-xl border border-slate-700 sticky top-2 backdrop-blur z-20 shadow-md">
             <div>
-              <h2 class="text-sm md:text-base font-bold text-white">${chapterTitle}</h2>
-              <p class="text-xs text-slate-400">${currentQuestions.length} Questions</p>
+              <h2 class="text-xs md:text-sm font-bold text-white truncate max-w-[200px] sm:max-w-none">${chapterTitle}</h2>
+              <p id="progress-indicator" class="text-xs text-cyan-400 font-medium">0 / ${currentQuestions.length} Answered</p>
             </div>
             <button id="top-submit-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow">
-              Submit
+              Submit Paper
             </button>
           </div>
 
-          <div class="space-y-4">
-            ${questionsHtml}
+          <div>
+            ${html}
           </div>
 
           <button id="bottom-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg">
-            Submit Test & Check Mistakes
+            Submit Complete Paper & Evaluate
           </button>
         </div>
       `;
 
       window.saveAnswer = (id, val) => {
         userAnswers[id] = val;
+        const count = Object.values(userAnswers).filter(v => v && v.trim && v.trim().length > 0).length;
+        const ind = document.getElementById("progress-indicator");
+        if (ind) ind.innerText = `${count} / ${currentQuestions.length} Answered`;
       };
 
       const submitAction = () => evaluateAndShowResult(chapterTitle, safeChapterId);
@@ -370,98 +409,69 @@ Return STRICTLY raw JSON (without markdown backticks):
       mainContent.innerHTML = `
         <div class="text-center py-20 space-y-4">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
-          <h3 id="eval-title" class="text-lg font-semibold text-white">AI is Evaluating Your Answers...</h3>
-          <p class="text-xs text-slate-400">Marking strictly as per CBSE step-evaluation criteria.</p>
+          <h3 id="eval-title" class="text-lg font-semibold text-white">AI Examiner Evaluating Answers...</h3>
+          <p class="text-xs text-slate-400">Step-by-step scoring as per official CBSE Class 10 criteria.</p>
         </div>
       `;
 
-      const updateStatus = (text) => {
-        const t = document.getElementById("eval-title");
-        if (t) t.innerText = text;
-      };
-
       try {
         const apiKey = await getGeminiKey();
+
+        // 1. Instant Objective Grading (MCQ + Assertion-Reason)
+        let breakdown = [];
+        let score = 0;
+        let subjectiveQuestions = [];
+
+        currentQuestions.forEach(q => {
+          const userAns = (userAnswers[q.id] || "").trim();
+          if (q.type === 'MCQ' || q.type === 'ASSERTION_REASON') {
+            const isCorrect = userAns.toLowerCase() === (q.correctAnswer || "").trim().toLowerCase();
+            if (isCorrect) score += 1;
+            breakdown.push({
+              id: q.id,
+              question: q.question,
+              type: q.type,
+              userAnswer: userAns || "Not Answered",
+              correctAnswer: q.correctAnswer,
+              isCorrect: isCorrect,
+              mistakeComment: isCorrect ? "Correct answer selected." : "Incorrect choice."
+            });
+          } else {
+            subjectiveQuestions.push({
+              id: q.id,
+              type: q.type,
+              question: q.question,
+              userAnswer: userAns,
+              correctAnswer: q.correctAnswer
+            });
+          }
+        });
+
+        // 2. AI Grading for Subjective Answers (VSA, SA, LA)
         const evalPrompt = `
-You are a CBSE Board Examiner grading a Class 10 student.
-Evaluate the answers:
-${JSON.stringify({ questions: currentQuestions, answers: userAnswers })}
+You are a CBSE Board Examiner evaluating student's written answers.
+Grade these subjective questions strictly as per CBSE marking criteria:
+${JSON.stringify(subjectiveQuestions)}
 
 Return STRICTLY raw JSON:
 {
-  "score": 0,
-  "maxScore": ${currentQuestions.length},
-  "percentage": 0,
-  "summary": "2-3 lines feedback on weak areas",
-  "breakdown": [
+  "subjectiveScore": 0,
+  "summary": "Brief 2-line overall feedback on conceptual strengths and weaknesses",
+  "evaluations": [
     {
-      "question": "Question text",
-      "type": "type",
-      "userAnswer": "Student's answer",
-      "correctAnswer": "Ideal answer",
+      "id": 21,
       "isCorrect": true,
-      "mistakeComment": "Specific error explanation"
+      "mistakeComment": "Brief 1-sentence analysis of missing points or keywords"
     }
   ]
 }
 `;
 
-        const resData = await callGeminiWithRetry(apiKey, evalPrompt, updateStatus);
+        const resData = await callGeminiWithRetry(apiKey, evalPrompt, (t) => {
+          const el = document.getElementById("eval-title");
+          if (el) el.innerText = t;
+        });
+
         let jsonText = resData.candidates[0].content.parts[0].text;
         jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const evalData = JSON.parse(jsonText);
-
-        const newTopics = currentQuestions.map(q => q.topicKeyword || q.question.substring(0, 30));
-        const historyRef = doc(db, "users", currentUser.uid, "history", safeChapterId);
-        await setDoc(historyRef, { topics: arrayUnion(...newTopics) }, { merge: true });
-
-        renderResultScreen(evalData);
-
-      } catch (err) {
-        console.error(err);
-        alert("Evaluation failed. Please retry.");
-        renderSetupScreen();
-      }
-    }
-
-    function renderResultScreen(res) {
-      let breakdownHtml = res.breakdown.map((b) => `
-        <div class="p-4 rounded-xl border ${b.isCorrect ? 'bg-emerald-950/20 border-emerald-900/60' : 'bg-red-950/20 border-red-900/60'}">
-          <div class="flex items-center justify-between text-xs mb-1">
-            <span class="font-semibold ${b.isCorrect ? 'text-emerald-400' : 'text-red-400'}">
-              ${b.isCorrect ? '✓ Correct' : '✕ Needs Improvement'}
-            </span>
-            <span class="text-slate-400">${b.type}</span>
-          </div>
-          <p class="text-sm text-white font-medium mb-2">${b.question}</p>
-          <div class="text-xs space-y-1 text-slate-300">
-            <p><span class="text-slate-400">Your Answer:</span> ${b.userAnswer || 'Not Answered'}</p>
-            <p><span class="text-slate-400">Model Answer:</span> ${b.correctAnswer}</p>
-            ${b.mistakeComment ? `<p class="text-amber-300 mt-1"><span class="font-semibold">Mistake:</span> ${b.mistakeComment}</p>` : ''}
-          </div>
-        </div>
-      `).join('');
-
-      mainContent.innerHTML = `
-        <div class="space-y-6">
-          <div class="bg-slate-800/80 p-6 rounded-2xl border border-slate-700 text-center">
-            <h2 class="text-4xl font-bold text-cyan-400">${res.score} / ${res.maxScore}</h2>
-            <p class="text-sm font-semibold text-white mt-1">Score: ${res.percentage}%</p>
-            <p class="text-xs text-slate-300 mt-2 max-w-md mx-auto">${res.summary}</p>
-            <button id="practice-more-btn" class="mt-5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow">
-              Practice Another Chapter / Next Set
-            </button>
-          </div>
-
-          <div class="space-y-3">
-            <h3 class="text-sm font-bold text-slate-300">Detailed Question Breakdown & Mistakes</h3>
-            ${breakdownHtml}
-          </div>
-        </div>
-      `;
-
-      document.getElementById("practice-more-btn").onclick = renderSetupScreen;
-    }
-  </script>
-</body>
-</html>
+        const aiEval = JSON.parse(jsonT
