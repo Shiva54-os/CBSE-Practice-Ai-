@@ -80,54 +80,55 @@
       throw new Error("Gemini key not found in Firebase Firestore.");
     }
 
-    // High Reliability AI Caller with Silent Auto-Retry
+    // Bulletproof Auto-Retry on verified model
     async function callGeminiWithRetry(apiKey, prompt, updateStatus) {
-      const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+      const maxRetries = 4;
       let lastErrorMessage = "";
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        for (const model of models) {
-          try {
-            if (updateStatus) {
-              updateStatus(attempt > 1 ? `Optimizing connection... (Retry ${attempt}/3)` : `Generating official CBSE question paper...`);
-            }
-
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-goog-api-key": apiKey
-              },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { 
-                  responseMimeType: "application/json",
-                  temperature: 0.7
-                }
-              })
-            });
-
-            const data = await res.json();
-            if (data.candidates && data.candidates[0]) {
-              return data;
-            }
-
-            if (data.error) {
-              lastErrorMessage = data.error.message;
-              console.warn(`Model ${model} busy/unavailable:`, data.error.message);
-            }
-          } catch (err) {
-            lastErrorMessage = err.message;
-            console.warn(`Network issue with ${model}:`, err);
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          if (updateStatus) {
+            updateStatus(attempt === 1 
+              ? "Generating CBSE Exam Paper..." 
+              : `High demand on AI server, auto-connecting... (Attempt ${attempt}/${maxRetries})`
+            );
           }
-          // Chhota 800ms gap next model call se pehle
-          await new Promise(r => setTimeout(r, 800));
+
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-goog-api-key": apiKey
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { 
+                responseMimeType: "application/json",
+                temperature: 0.7
+              }
+            })
+          });
+
+          const data = await res.json();
+          if (data.candidates && data.candidates[0]) {
+            return data;
+          }
+
+          if (data.error) {
+            lastErrorMessage = data.error.message;
+            console.warn(`Attempt ${attempt} rush/error:`, data.error.message);
+          }
+        } catch (err) {
+          lastErrorMessage = err.message;
+          console.warn(`Network error on attempt ${attempt}:`, err);
         }
-        // Agar saare models busy hue toh 2 second wait karke dobara silently try karega
-        await new Promise(r => setTimeout(r, 2000));
+
+        // 2.5 second silent pause to let server traffic clear
+        await new Promise((resolve) => setTimeout(resolve, 2500));
       }
 
-      throw new Error(lastErrorMessage || "AI server is momentarily busy. Please click Try Again.");
+      throw new Error(lastErrorMessage || "Server is experiencing heavy traffic. Please click Try Again.");
     }
 
     function renderAuthButton() {
@@ -206,7 +207,7 @@
         <div class="text-center py-20 space-y-4">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-cyan-500 border-t-transparent"></div>
           <h3 id="loader-title" class="text-lg font-semibold text-white">Generating CBSE Exam Questions...</h3>
-          <p id="loader-sub" class="text-xs text-slate-400">Verifying non-repetition database...</p>
+          <p id="loader-sub" class="text-xs text-slate-400">Verifying past questions from your account to avoid repetition.</p>
         </div>
       `;
 
@@ -233,7 +234,7 @@ Generate:
 - 2 Short Answer (SA)
 - 1 Long Answer (LA)
 
-Return STRICTLY raw JSON (without backticks or extra words):
+Return STRICTLY raw JSON (without markdown backticks):
 {
   "title": "${chapter}",
   "questions": [
@@ -463,4 +464,4 @@ Return STRICTLY raw JSON:
     }
   </script>
 </body>
-  </html>
+</html>
