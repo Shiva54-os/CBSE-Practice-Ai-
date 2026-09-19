@@ -63,6 +63,7 @@
       touch-action: manipulation;
     }
     .btn:active { opacity: 0.9; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary {
       background: #1e293b;
       border: 1px solid #334155;
@@ -132,12 +133,17 @@
       margin: 16px 0;
       line-height: 1.8;
     }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #38bdf8;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-
-  <!-- Official Firebase SDK (Safe Compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -148,21 +154,20 @@
         <p style="font-size: 11px; color: #64748b;">Class 10 Smart Mock System • 43 Questions</p>
       </div>
       <div id="auth-status-container">
-        <button id="auth-btn" class="btn-secondary" onclick="handleAuthAction()">Google Sign-In</button>
+        <button id="google-login-btn" class="btn-secondary">Google Sign-In</button>
       </div>
     </header>
 
     <main id="app-view">
-      <!-- Setup Screen -->
       <div class="card">
         <div style="margin-bottom: 16px;">
           <label>Subject / Chapter Name</label>
           <input type="text" id="chapter-input" value="Science: Chemical Reactions and Equations" placeholder="Enter chapter name..." />
           <div style="margin-top: 8px;">
-            <button class="chip" onclick="setTopic('Science: Chemical Reactions and Equations')">🧪 Chemical Reactions</button>
-            <button class="chip" onclick="setTopic('Science: Electricity')">⚡ Electricity</button>
-            <button class="chip" onclick="setTopic('Science: Life Processes')">🧬 Life Processes</button>
-            <button class="chip" onclick="setTopic('Science: Light')">💡 Light</button>
+            <button type="button" class="chip" data-topic="Science: Chemical Reactions and Equations">🧪 Chemical Reactions</button>
+            <button type="button" class="chip" data-topic="Science: Electricity">⚡ Electricity</button>
+            <button type="button" class="chip" data-topic="Science: Life Processes">🧬 Life Processes</button>
+            <button type="button" class="chip" data-topic="Science: Light - Reflection and Refraction">💡 Light</button>
           </div>
         </div>
 
@@ -175,6 +180,12 @@
           </select>
         </div>
 
+        <div id="key-config-wrapper" style="margin-bottom: 16px;">
+          <label>Gemini API Key <span id="key-status-label" style="color: #38bdf8; font-size: 11px;">(Auto-loaded if logged in)</span></label>
+          <input type="text" id="api-key-input" placeholder="Paste your AI Studio Key (AIzaSy...) here" />
+          <p style="font-size: 11px; color: #64748b; margin-top: 4px;">Key browser mein safe save ho jayegi, baar-baar nahi maangega.</p>
+        </div>
+
         <div class="info-list">
           <p style="color: #cbd5e1; font-weight: 700; margin-bottom: 4px;">📄 Complete 43-Question Board Paper:</p>
           <p>• Section A: 15 MCQs (1 Mark)</p>
@@ -184,15 +195,19 @@
           <p>• Section E: 5 Long Answers - LA (5 Marks)</p>
         </div>
 
-        <button class="btn" id="generate-btn" onclick="startExamGeneration()">
+        <button type="button" class="btn" id="generate-paper-btn">
           Generate Full Board Paper (43 Questions)
         </button>
       </div>
     </main>
   </div>
 
-  <script>
-    // Firebase Init
+  <!-- Firebase Modular Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyAveLxGKaflyzauKoivpxW_XBKFzylgRfs",
       authDomain: "cbse-practice-5c956.firebaseapp.com",
@@ -202,64 +217,118 @@
       appId: "1:264196286802:web:e4485efa3e2720559bf28b"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
     let currentUser = null;
-    let cachedApiKey = localStorage.getItem("saved_gemini_key") || "";
-    let questionsData = [];
-    let studentResponses = {};
+    let examQuestions = [];
+    let userAnswers = {};
     let activeChapter = "";
 
-    function setTopic(t) {
-      document.getElementById("chapter-input").value = t;
+    // Pre-fill saved key from localStorage
+    const savedKey = localStorage.getItem("saved_gemini_key") || "";
+    const keyInput = document.getElementById("api-key-input");
+    if (savedKey && keyInput) {
+      keyInput.value = savedKey;
     }
 
-    // Auto-listen to Google Login and sync key from Firestore
-    auth.onAuthStateChanged(async (user) => {
+    // Google Auth State
+    onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       const authBox = document.getElementById("auth-status-container");
+      const statusLabel = document.getElementById("key-status-label");
+
       if (user) {
-        authBox.innerHTML = `
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:11px; color:#38bdf8;">${user.displayName ? user.displayName.split(' ')[0] : 'Student'}</span>
-            <button class="btn-secondary" onclick="auth.signOut()">Logout</button>
-          </div>
-        `;
-        // Fetch key from Firestore settings/api
+        if (authBox) {
+          authBox.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:11px; color:#38bdf8;">${user.displayName ? user.displayName.split(' ')[0] : 'Student'}</span>
+              <button id="logout-btn" class="btn-secondary">Logout</button>
+            </div>
+          `;
+          document.getElementById("logout-btn").onclick = () => signOut(auth);
+        }
+
+        // Fetch API key from Firestore
         try {
-          const docSnap = await db.collection("settings").doc("api").get();
-          if (docSnap.exists && docSnap.data().geminiKey) {
-            cachedApiKey = docSnap.data().geminiKey.trim();
-            localStorage.setItem("saved_gemini_key", cachedApiKey);
-            console.log("Key successfully synced from Firestore!");
+          const snap = await getDoc(doc(db, "settings", "api"));
+          if (snap.exists() && snap.data().geminiKey) {
+            const firestoreKey = snap.data().geminiKey.trim();
+            localStorage.setItem("saved_gemini_key", firestoreKey);
+            if (keyInput) keyInput.value = firestoreKey;
+            if (statusLabel) statusLabel.innerText = "✓ Synced from Firestore";
           }
-        } catch(e) {
-          console.warn("Firestore sync notice:", e);
+        } catch (e) {
+          console.warn("Firestore sync:", e);
         }
       } else {
-        authBox.innerHTML = `<button class="btn-secondary" onclick="handleAuthAction()">Google Sign-In</button>`;
+        if (authBox) {
+          authBox.innerHTML = `<button id="google-login-btn" class="btn-secondary">Google Sign-In</button>`;
+          document.getElementById("google-login-btn").onclick = () => signInWithPopup(auth, provider).catch(console.warn);
+        }
       }
     });
 
-    async function handleAuthAction() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        await auth.signInWithPopup(provider);
-      } catch(err) {
-        console.warn("Sign-in notice:", err);
-      }
+    const loginBtn = document.getElementById("google-login-btn");
+    if (loginBtn) {
+      loginBtn.onclick = () => signInWithPopup(auth, provider).catch(console.warn);
     }
 
-    // Direct Gemini Call with verified gemini-2.0-flash
-    async function requestGemini(apiKey, promptText) {
+    // Chip quick selectors
+    document.querySelectorAll(".chip").forEach(btn => {
+      btn.onclick = () => {
+        const topic = btn.getAttribute("data-topic");
+        const chInput = document.getElementById("chapter-input");
+        if (chInput) chInput.value = topic;
+      };
+    });
+
+    // Primary Generation Button
+    const genBtn = document.getElementById("generate-paper-btn");
+    if (genBtn) {
+      genBtn.onclick = handleGenerateClick;
+    }
+
+    async function handleGenerateClick() {
+      const chInput = document.getElementById("chapter-input");
+      const diffSelect = document.getElementById("diff-select");
+      const keyField = document.getElementById("api-key-input");
+
+      const chapter = chInput ? chInput.value.trim() : "";
+      const diff = diffSelect ? diffSelect.value : "";
+      let apiKey = keyField ? keyField.value.trim() : "";
+
+      if (!chapter) {
+        alert("Please enter a subject or chapter name.");
+        return;
+      }
+
+      if (!apiKey) {
+        apiKey = localStorage.getItem("saved_gemini_key") || "";
+      }
+
+      if (!apiKey) {
+        alert("Please paste your Gemini API Key in the box below to generate questions.");
+        if (keyField) keyField.focus();
+        return;
+      }
+
+      // Save valid key locally
+      localStorage.setItem("saved_gemini_key", apiKey);
+      activeChapter = chapter;
+      executeExamPipeline(chapter, diff, apiKey);
+    }
+
+    // Call Gemini API with automatic model fallback
+    async function requestAI(apiKey, promptText) {
       const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
       let lastErr = "";
 
       for (const model of models) {
         try {
-          const url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
           const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -279,123 +348,95 @@
             return JSON.parse(txt);
           }
           if (data.error) lastErr = data.error.message;
-        } catch(e) {
+        } catch (e) {
           lastErr = e.message;
         }
       }
-      throw new Error(lastErr || "Could not generate questions. Please retry.");
+      throw new Error(lastErr || "Failed to connect to AI server. Please verify your API Key.");
     }
 
-    async function startExamGeneration() {
-      const chapter = document.getElementById("chapter-input").value.trim();
-      const diff = document.getElementById("diff-select").value;
-
-      if (!chapter) {
-        alert("Please enter a chapter name");
-        return;
-      }
-      activeChapter = chapter;
-
-      // Check if key is available
-      if (!cachedApiKey) {
-        // Try getting from Firestore if logged in
-        if (currentUser) {
-          try {
-            const snap = await db.collection("settings").doc("api").get();
-            if (snap.exists && snap.data().geminiKey) {
-              cachedApiKey = snap.data().geminiKey.trim();
-              localStorage.setItem("saved_gemini_key", cachedApiKey);
-            }
-          } catch(e){}
-        }
-      }
-
-      // If still no key, ask the user directly right here (No freeze, no deadlock)
-      if (!cachedApiKey) {
-        const inputKey = prompt("Please enter or paste your Gemini API Key once (it will be saved for all future practice tests):");
-        if (!inputKey || !inputKey.trim()) {
-          alert("API Key is required to generate the paper.");
-          return;
-        }
-        cachedApiKey = inputKey.trim();
-        localStorage.setItem("saved_gemini_key", cachedApiKey);
-      }
-
+    async function executeExamPipeline(chapter, difficulty, apiKey) {
       const main = document.getElementById("app-view");
       main.innerHTML = `
-        <div class="card" style="text-align: center; padding: 30px 20px;">
-          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Drafting 43-Question CBSE Board Paper</h3>
-          <div id="live-logs" class="log-box">Connecting to Gemini AI engine...</div>
+        <div class="card" style="text-align: center; padding: 34px 20px;">
+          <div class="spinner"></div>
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 10px;">Generating 43-Question CBSE Exam Paper</h3>
+          <div id="live-status" class="log-box">Connecting to AI engine...</div>
         </div>
       `;
 
-      const logBox = document.getElementById("live-logs");
-      const addLog = (m) => { logBox.innerHTML += "<br/>" + m; };
+      const statusBox = document.getElementById("live-status");
+      const log = (msg) => { if (statusBox) statusBox.innerHTML += "<br/>" + msg; };
 
       try {
-        const storageKey = "history_" + chapter.toLowerCase().replace(/[^a-z0-9]/g, "_");
+        const safeChapterId = chapter.toLowerCase().replace(/[^a-z0-9]/g, "_");
         let excluded = [];
-        try {
-          excluded = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        } catch(e){}
 
-        // Two-Stage Generation to prevent High Demand 503
-        addLog("▶ [Stage 1/2] Drafting Section A & B (20 Objective Questions)...");
+        // Exclude past solved questions to prevent repetition
+        if (currentUser) {
+          try {
+            const hSnap = await getDoc(doc(db, "users", currentUser.uid, "history", safeChapterId));
+            if (hSnap.exists()) excluded = hSnap.data().topics || [];
+          } catch (e) {}
+        } else {
+          try {
+            excluded = JSON.parse(localStorage.getItem("hist_" + safeChapterId) || "[]");
+          } catch(e) {}
+        }
+
+        // Stage 1: Objective Questions (20 Questions)
+        log("▶ [Stage 1/2] Drafting Section A (15 MCQs) & Section B (5 AR)...");
         const prompt1 = `
-CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${diff}. Exclude: ${JSON.stringify(excluded.slice(-20))}.
+CBSE Class 10 Examiner. Chapter: "${chapter}". Level: ${difficulty}. Avoid: ${JSON.stringify(excluded.slice(-20))}.
 Generate 20 Objective Questions:
 - 15 MCQs (Section A, id: 1 to 15, type: "MCQ", 4 options)
 - 5 Assertion-Reason (Section B, id: 16 to 20, type: "ASSERTION_REASON", 4 options: ["Both A and R are true and R is correct explanation of A", "Both A and R are true but R is NOT correct explanation of A", "A is true but R is false", "A is false but R is true"])
-Return strictly RAW JSON:
+Return RAW JSON only:
 {"questions": [{"id": 1, "section": "Section A: Multiple Choice Questions (15 Marks)", "type": "MCQ", "question": "...", "options": ["A","B","C","D"], "correctAnswer": "...", "topicKeyword": "topic"}]}`;
 
-        const resObj = await requestGemini(cachedApiKey, prompt1);
-        addLog("✓ Section A & B ready (" + (resObj.questions ? resObj.questions.length : 0) + " questions)!");
+        const resObj = await requestAI(apiKey, prompt1);
+        log("✓ Section A & B ready (" + (resObj.questions ? resObj.questions.length : 0) + " questions)!");
 
-        addLog("▶ [Stage 2/2] Drafting Section C, D, E (23 Subjective Questions)...");
+        // Stage 2: Subjective Questions (23 Questions)
+        log("▶ [Stage 2/2] Drafting Section C (10 VSA), Section D (8 SA), Section E (5 LA)...");
         const prompt2 = `
-CBSE Class 10 Board Examiner. Chapter: "${chapter}". Level: ${diff}. Exclude: ${JSON.stringify(excluded.slice(-20))}.
+CBSE Class 10 Examiner. Chapter: "${chapter}". Level: ${difficulty}. Avoid: ${JSON.stringify(excluded.slice(-20))}.
 Generate 23 Subjective Questions:
 - 10 Very Short Answer (Section C, id: 21 to 30, type: "VSA", 2 marks)
 - 8 Short Answer (Section D, id: 31 to 38, type: "SA", 3 marks)
 - 5 Long Answer (Section E, id: 39 to 43, type: "LA", 5 marks)
-Return strictly RAW JSON:
+Return RAW JSON only:
 {"questions": [{"id": 21, "section": "Section C: Very Short Answer Questions (20 Marks)", "type": "VSA", "question": "...", "options": null, "correctAnswer": "Key criteria points", "topicKeyword": "topic"}]}`;
 
-        const resSub = await requestGemini(cachedApiKey, prompt2);
-        addLog("✓ Section C, D, E ready (" + (resSub.questions ? resSub.questions.length : 0) + " questions)!");
+        const resSub = await requestAI(apiKey, prompt2);
+        log("✓ Section C, D, E ready (" + (resSub.questions ? resSub.questions.length : 0) + " questions)!");
 
-        questionsData = [...(resObj.questions || []), ...(resSub.questions || [])];
-        studentResponses = {};
+        examQuestions = [...(resObj.questions || []), ...(resSub.questions || [])];
+        userAnswers = {};
 
-        addLog("✓ Finalizing complete paper...");
-        setTimeout(() => renderExamPaper(), 400);
+        log("✓ Compiling final paper...");
+        setTimeout(() => renderTestScreen(chapter, safeChapterId, apiKey), 400);
 
       } catch (err) {
         console.error(err);
-        addLog("<span style='color: #f87171;'>❌ " + err.message + "</span>");
+        log("<span style='color:#f87171;'>❌ Error: " + err.message + "</span>");
         main.innerHTML += `
-          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px;">
-            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="resetApiKey()">Reset / Re-enter API Key</button>
-            <button class="btn-secondary" style="padding: 10px 20px;" onclick="location.reload()">Retry Home</button>
+          <div style="display:flex; gap:10px; justify-content:center; margin-top:16px;">
+            <button id="retry-now-btn" class="btn" style="width:auto; padding:10px 20px;">Try Again</button>
+            <button id="reset-home-btn" class="btn-secondary" style="padding:10px 20px;">Change Details</button>
           </div>
         `;
+        document.getElementById("retry-now-btn").onclick = () => executeExamPipeline(chapter, difficulty, apiKey);
+        document.getElementById("reset-home-btn").onclick = () => location.reload();
       }
     }
 
-    function resetApiKey() {
-      localStorage.removeItem("saved_gemini_key");
-      cachedApiKey = "";
-      alert("API Key cleared. When you click Generate, it will ask for the fresh key.");
-      location.reload();
-    }
-
-    function renderExamPaper() {
+    function renderTestScreen(chapterTitle, safeChapterId, apiKey) {
       const main = document.getElementById("app-view");
       let curSection = "";
       let questionsHtml = "";
 
-      questionsData.forEach((q, idx) => {
+      examQuestions.forEach((q, idx) => {
         if (q.section && q.section !== curSection) {
           curSection = q.section;
           questionsHtml += `
@@ -411,7 +452,7 @@ Return strictly RAW JSON:
             <div style="margin-top: 8px;">
               ${q.options.map(opt => `
                 <label class="option-row">
-                  <input type="radio" name="q_${q.id}" value="${opt.replace(/"/g, '&quot;')}" onchange="recordAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}')" />
+                  <input type="radio" name="q_${q.id}" value="${opt.replace(/"/g, '&quot;')}" onchange="window.recordResponse(${q.id}, '${opt.replace(/'/g, "\\'")}')" />
                   <span>${opt}</span>
                 </label>
               `).join('')}
@@ -421,7 +462,7 @@ Return strictly RAW JSON:
           const height = q.type === 'LA' ? '120px' : q.type === 'SA' ? '85px' : '65px';
           inputMarkup = `
             <div style="margin-top: 8px;">
-              <textarea style="min-height: ${height};" placeholder="Write key points here..." oninput="recordAnswer(${q.id}, this.value)"></textarea>
+              <textarea style="min-height: ${height};" placeholder="Write key points here..." oninput="window.recordResponse(${q.id}, this.value)"></textarea>
             </div>
           `;
         }
@@ -430,7 +471,7 @@ Return strictly RAW JSON:
           <div class="card" style="margin-bottom: 12px; padding: 16px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
               <span style="font-size: 11px; font-weight: 700; color: #38bdf8; background: #0b0f19; padding: 2px 8px; border-radius: 6px;">${q.type}</span>
-              <span style="font-size: 11px; color: #64748b; font-family: monospace;">Q${idx + 1} / ${questionsData.length}</span>
+              <span style="font-size: 11px; color: #64748b; font-family: monospace;">Q${idx + 1} / ${examQuestions.length}</span>
             </div>
             <p style="font-size: 14px; font-weight: 600; white-space: pre-line;">${q.question}</p>
             ${inputMarkup}
@@ -442,82 +483,29 @@ Return strictly RAW JSON:
         <div>
           <div class="sticky-bar">
             <div>
-              <p style="font-size: 12px; font-weight: 700; color: #ffffff;">${activeChapter}</p>
-              <p id="ans-count" style="font-size: 11px; color: #38bdf8;">0 / ${questionsData.length} Answered</p>
+              <p style="font-size: 12px; font-weight: 700; color: #ffffff;">${chapterTitle}</p>
+              <p id="ans-counter" style="font-size: 11px; color: #38bdf8;">0 / ${examQuestions.length} Answered</p>
             </div>
-            <button class="btn" style="width: auto; padding: 8px 16px; font-size: 12px; background: #059669;" onclick="evaluateSubmission()">
+            <button id="submit-top-btn" class="btn" style="width: auto; padding: 8px 16px; font-size: 12px; background: #059669;">
               Submit Paper
             </button>
           </div>
 
           <div>${questionsHtml}</div>
 
-          <button class="btn" style="margin-top: 16px; background: #059669;" onclick="evaluateSubmission()">
+          <button id="submit-bottom-btn" class="btn" style="margin-top: 16px; background: #059669;">
             Submit Complete Paper & Evaluate
           </button>
         </div>
       `;
-    }
 
-    window.recordAnswer = function(id, val) {
-      studentResponses[id] = val;
-      const count = Object.values(studentResponses).filter(v => v && v.trim && v.trim().length > 0).length;
-      const el = document.getElementById("ans-count");
-      if (el) el.innerText = count + " / " + questionsData.length + " Answered";
-    };
+      window.recordResponse = (id, val) => {
+        userAnswers[id] = val;
+        const count = Object.values(userAnswers).filter(v => v && v.trim && v.trim().length > 0).length;
+        const counter = document.getElementById("ans-counter");
+        if (counter) counter.innerText = `${count} / ${examQuestions.length} Answered`;
+      };
 
-    async function evaluateSubmission() {
-      const main = document.getElementById("app-view");
-      main.innerHTML = `
-        <div class="card" style="text-align: center; padding: 40px 20px;">
-          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">AI Grading Your Exam Paper</h3>
-          <p style="font-size: 12px; color: #94a3b8;">Evaluating answers as per CBSE Class 10 step-marking guidelines...</p>
-        </div>
-      `;
-
-      try {
-        let score = 0;
-        let breakdown = [];
-        let writtenList = [];
-
-        // Instant local checking for Section A & B
-        questionsData.forEach(q => {
-          const ans = (studentResponses[q.id] || "").trim();
-          if (q.type === 'MCQ' || q.type === 'ASSERTION_REASON') {
-            const isRight = ans.toLowerCase() === (q.correctAnswer || "").trim().toLowerCase();
-            if (isRight) score += 1;
-            breakdown.push({
-              id: q.id,
-              type: q.type,
-              question: q.question,
-              userAnswer: ans || "Not Answered",
-              correctAnswer: q.correctAnswer,
-              isCorrect: isRight,
-              note: isRight ? "Correct answer." : "Incorrect choice."
-            });
-          } else {
-            writtenList.push({
-              id: q.id,
-              type: q.type,
-              question: q.question,
-              userAnswer: ans,
-              correctAnswer: q.correctAnswer
-            });
-          }
-        });
-
-        // AI Check for Section C, D, E
-        const evalPrompt = `
-CBSE Board Examiner. Evaluate these subjective answers:
-${JSON.stringify(writtenList)}
-Return strictly RAW JSON:
-{"summary": "Brief 2-line performance summary", "evaluations": [{"id": 21, "isCorrect": true, "note": "1-sentence note"}]}`;
-
-        const aiEval = await requestGemini(cachedApiKey, evalPrompt);
-        const evalMap = {};
-        (aiEval.evaluations || []).forEach(e => { evalMap[e.id] = e; });
-
-        writtenList.forEach(sq => {
-          const e = evalMap[sq.id] || { isCorrect: false, note: "Evaluated." };
-          if (e.isCorrect) score += 1;
-          breakdown.push({
+      const submitAction = () => evaluateCompleteSubmission(chapterTitle, safeChapterId, apiKey);
+      document.getElementById("submit-top-btn").onclick = submitAction;
+      document.getElementById("submi
