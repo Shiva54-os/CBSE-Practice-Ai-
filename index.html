@@ -38,7 +38,6 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Replaced Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAveLxGKaflyzauKoivpxW_XBKFzylgRfs",
       authDomain: "cbse-practice-5c956.firebaseapp.com",
@@ -48,8 +47,7 @@
       appId: "1:264196286802:web:e4485efa3e2720559bf28b"
     };
 
-    // Replaced Gemini Key
-    const GEMINI_API_KEY = "AQ.Ab8RN6K_D7J9J_b8E5PWBmdaEvvhYUzHpG3fF_NQ2kX8rTrPbg";
+    const GEMINI_API_KEY = "AQ.Ab8RN6KPedmXMdMrwPB2oiuXf2ullV_NKVJZ1Ntium7l-v3qYw";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -99,7 +97,7 @@
         <div class="bg-slate-800/60 border border-slate-700/60 p-8 rounded-2xl text-center my-12 backdrop-blur">
           <h2 class="text-2xl font-bold mb-3 text-white">Target 95%+ in Class 10 Boards</h2>
           <p class="text-slate-400 text-sm max-w-md mx-auto mb-6">
-            Log in to practice fresh CBSE questions (MCQ, Assertion-Reason, Short & Long Answers). Your solved questions are tracked individually to prevent repeats.
+            Log in to practice fresh CBSE questions (MCQ, Assertion-Reason, Short & Long Answers). Solved questions are tracked individually to prevent repeats.
           </p>
           <button id="hero-login-btn" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-3 rounded-xl transition shadow-lg shadow-blue-500/20">
             Sign In with Google to Start Practice
@@ -160,20 +158,17 @@
         const excludedTopics = historySnap.exists() ? historySnap.data().topics || [] : [];
 
         const prompt = `
-You are a senior CBSE Class 10 Board Examiner. Create a comprehensive practice test for Chapter: "${chapter}".
+You are a senior CBSE Class 10 Board Examiner. Create a practice test for Chapter: "${chapter}".
 Difficulty Level: ${difficulty}.
-CRITICAL NON-REPEAT RULE: DO NOT repeat these topics/questions already solved by this user: ${JSON.stringify(excludedTopics.slice(-30))}.
+CRITICAL RULE: DO NOT repeat these topics/questions already solved: ${JSON.stringify(excludedTopics.slice(-25))}.
 
-Generate a mixed paper with:
-- 10 Multiple Choice Questions (MCQ)
+Generate:
+- 5 MCQs
 - 2 Assertion-Reason Questions
-- 2 True/False Questions
-- 2 One-Word Answer Questions
-- 2 Very Short Answers (VSA)
-- 2 Short Answers (SA)
+- 2 Short Answer (SA)
 - 1 Long Answer (LA)
 
-Return STRICTLY raw JSON (without backticks or extra words):
+Return STRICTLY raw JSON (no backticks):
 {
   "title": "${chapter}",
   "questions": [
@@ -190,61 +185,40 @@ Return STRICTLY raw JSON (without backticks or extra words):
       "type": "ASSERTION_REASON",
       "question": "Assertion (A): ... Reason (R): ...",
       "options": [
-        "Both A and R are true and R is the correct explanation of A",
-        "Both A and R are true but R is NOT the correct explanation of A",
+        "Both A and R are true and R is correct explanation of A",
+        "Both A and R are true but R is NOT correct explanation of A",
         "A is true but R is false",
         "A is false but R is true"
       ],
-      "correctAnswer": "Both A and R are true and R is the correct explanation of A",
+      "correctAnswer": "Both A and R are true and R is correct explanation of A",
       "topicKeyword": "Topic summary"
     },
     {
       "id": 3,
-      "type": "TRUE_FALSE",
-      "question": "Statement",
-      "options": ["True", "False"],
-      "correctAnswer": "True",
+      "type": "SHORT_ANSWER",
+      "question": "Question text (3 marks)",
+      "options": null,
+      "correctAnswer": "Key points expected",
       "topicKeyword": "Topic summary"
     },
     {
       "id": 4,
-      "type": "ONE_WORD",
-      "question": "One word question text",
+      "type": "LONG_ANSWER",
+      "question": "Descriptive question (5 marks)",
       "options": null,
-      "correctAnswer": "Ideal term",
-      "topicKeyword": "Topic summary"
-    },
-    {
-      "id": 5,
-      "type": "VSA",
-      "question": "Very Short Answer Question (2 marks)",
-      "options": null,
-      "correctAnswer": "Key points expected",
-      "topicKeyword": "Topic summary"
-    },
-    {
-      "id": 6,
-      "type": "SA",
-      "question": "Short Answer Question (3 marks)",
-      "options": null,
-      "correctAnswer": "Key points expected",
-      "topicKeyword": "Topic summary"
-    },
-    {
-      "id": 7,
-      "type": "LA",
-      "question": "Long Answer Question (5 marks)",
-      "options": null,
-      "correctAnswer": "Comprehensive marking points",
+      "correctAnswer": "Marking scheme points",
       "topicKeyword": "Topic summary"
     }
   ]
 }
 `;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": GEMINI_API_KEY
+          },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { responseMimeType: "application/json" }
@@ -269,7 +243,6 @@ Return STRICTLY raw JSON (without backticks or extra words):
         mainContent.innerHTML = `
           <div class="bg-red-950/40 border border-red-800 p-6 rounded-2xl text-center space-y-4">
             <p class="text-red-400 text-sm font-medium">Failed to generate test: ${err.message}</p>
-            <p class="text-xs text-slate-400">If API key error occurs, ensure your Gemini key starts with AIzaSy.</p>
             <button onclick="location.reload()" class="bg-slate-800 px-4 py-2 rounded-lg text-xs text-white">Try Again</button>
           </div>
         `;
@@ -329,7 +302,7 @@ Return STRICTLY raw JSON (without backticks or extra words):
           </div>
 
           <button id="bottom-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg">
-            Submit Test & Evaluate Mistakes
+            Submit Test & Check Mistakes
           </button>
         </div>
       `;
@@ -347,17 +320,15 @@ Return STRICTLY raw JSON (without backticks or extra words):
       mainContent.innerHTML = `
         <div class="text-center py-20 space-y-4">
           <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
-          <h3 class="text-lg font-semibold text-white">AI is Evaluating Your Answer Sheet...</h3>
-          <p class="text-xs text-slate-400">Marking according to CBSE step-evaluation criteria.</p>
+          <h3 class="text-lg font-semibold text-white">AI is Evaluating Your Answers...</h3>
+          <p class="text-xs text-slate-400">Marking strictly as per CBSE scheme.</p>
         </div>
       `;
 
       try {
         const evalPrompt = `
-You are an official CBSE Board Examiner checking a Class 10 student's answers.
-Evaluate the student's typed responses and selected options.
-
-Test Data:
+You are a CBSE Board Examiner grading a Class 10 student.
+Evaluate the answers:
 ${JSON.stringify({ questions: currentQuestions, answers: userAnswers })}
 
 Return STRICTLY raw JSON:
@@ -365,7 +336,7 @@ Return STRICTLY raw JSON:
   "score": 0,
   "maxScore": ${currentQuestions.length},
   "percentage": 0,
-  "summary": "2-3 lines feedback detailing strengths and areas where marks were lost",
+  "summary": "2-3 lines feedback on weak areas and CBSE tips",
   "breakdown": [
     {
       "question": "Question text",
@@ -373,15 +344,18 @@ Return STRICTLY raw JSON:
       "userAnswer": "Student's answer",
       "correctAnswer": "Ideal answer",
       "isCorrect": true,
-      "mistakeComment": "Specific error details or missing keywords if marks were deducted"
+      "mistakeComment": "Specific error explanation"
     }
   ]
 }
 `;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": GEMINI_API_KEY
+          },
           body: JSON.stringify({
             contents: [{ parts: [{ text: evalPrompt }] }],
             generationConfig: { responseMimeType: "application/json" }
@@ -393,7 +367,6 @@ Return STRICTLY raw JSON:
         jsonText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
         const evalData = JSON.parse(jsonText);
 
-        // Update user Firestore document to prevent repetition on subsequent tests
         const newTopics = currentQuestions.map(q => q.topicKeyword || q.question.substring(0, 30));
         const historyRef = doc(db, "users", currentUser.uid, "history", safeChapterId);
         await setDoc(historyRef, { topics: arrayUnion(...newTopics) }, { merge: true });
@@ -402,7 +375,7 @@ Return STRICTLY raw JSON:
 
       } catch (err) {
         console.error(err);
-        alert("Evaluation failed. Please verify connection and retry.");
+        alert("Evaluation failed. Please retry.");
         renderSetupScreen();
       }
     }
@@ -420,7 +393,7 @@ Return STRICTLY raw JSON:
           <div class="text-xs space-y-1 text-slate-300">
             <p><span class="text-slate-400">Your Answer:</span> ${b.userAnswer || 'Not Answered'}</p>
             <p><span class="text-slate-400">Model Answer:</span> ${b.correctAnswer}</p>
-            ${b.mistakeComment ? `<p class="text-amber-300 mt-1"><span class="font-semibold">Mistake Analysis:</span> ${b.mistakeComment}</p>` : ''}
+            ${b.mistakeComment ? `<p class="text-amber-300 mt-1"><span class="font-semibold">Mistake:</span> ${b.mistakeComment}</p>` : ''}
           </div>
         </div>
       `).join('');
